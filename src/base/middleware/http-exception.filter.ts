@@ -6,35 +6,33 @@ import {
   HttpStatus,
   Inject,
 } from '@nestjs/common';
-import { LoggerService } from '@/base/logger/logger.service';
+
+import { LoggerService } from '@base/logger';
+import { config } from '@base/config';
+
+import * as exc from '@base/api/exception.reslover';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
-  constructor(@Inject(LoggerService) private readonly logger: LoggerService) {}
+  constructor(private readonly loggerService: LoggerService) {}
 
-  catch(exception: unknown, host: ArgumentsHost) {
+  private logger = this.loggerService.getLogger('http-exception');
+  catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
-    const request = ctx.getRequest();
 
-    const status =
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
+    const status = exception.getStatus();
+    let excResponse = exception.getResponse();
 
-    const message =
-      exception instanceof HttpException
-        ? exception.message
-        : 'Internal server error';
-
-    this.logger.error(
-      `${request.method} ${request.url} - ${status} - ${message}`,
-    );
-
-    response.status(status).json({
+    excResponse = new exc.BadRequest({
+      errorCode: exc.STATUS_CODE_MAP[status] ?? exc.UNKNOWN,
       statusCode: status,
-      timestamp: new Date().toISOString(),
-      path: request.url,
-    });
+      message:
+        typeof excResponse === 'object' ? excResponse['message'] : excResponse,
+      data: typeof excResponse === 'object' ? excResponse['data'] : null,
+    }).getResponse();
+
+    this.logger.error(excResponse?.['message']);
+    response.status(status).json(excResponse);
   }
 }

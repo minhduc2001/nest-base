@@ -7,7 +7,7 @@ import {
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { Payload, defaultPayload } from '@/base/api/api.schema';
+import { Payload, defaultPayload } from '@base/api/api.schema';
 
 @Injectable()
 export class ResponseTransformInterceptor<T>

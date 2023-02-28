@@ -2,7 +2,7 @@ import fs = require('fs');
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { ValidationError as NestValidationError } from '@nestjs/common';
 
-import { Payload, defaultPayload } from '@/base/api/api.schema';
+import { Payload, defaultPayload } from '@base/api/api.schema';
 
 /**
  * MODULE_ACTION_ERROR: xyz zzt
