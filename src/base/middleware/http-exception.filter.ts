@@ -3,12 +3,9 @@ import {
   Catch,
   ArgumentsHost,
   HttpException,
-  HttpStatus,
-  Inject,
 } from '@nestjs/common';
 
 import { LoggerService } from '@base/logger';
-import { config } from '@base/config';
 
 import * as exc from '@base/api/exception.reslover';
 

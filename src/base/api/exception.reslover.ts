@@ -144,18 +144,6 @@ export class MethodNotAllowed<TData> extends BaseException<TData> {
   }
 }
 
-export class NotAcceptable<TData> extends BaseException<TData> {
-  constructor(payload: Payload<TData>) {
-    super(payload, HttpStatus.NOT_ACCEPTABLE);
-  }
-}
-
-export class Conflict<TData> extends BaseException<TData> {
-  constructor(payload: Payload<TData>) {
-    super(payload, HttpStatus.CONFLICT);
-  }
-}
-
 export class UnsupportedMediaType<TData> extends BaseException<TData> {
   constructor(payload: Payload<TData>) {
     super(
@@ -163,41 +151,6 @@ export class UnsupportedMediaType<TData> extends BaseException<TData> {
       HttpStatus.UNSUPPORTED_MEDIA_TYPE,
       'Unsupported format file',
     );
-  }
-}
-
-export class TemporaryRedirect<TData> extends BaseException<TData> {
-  constructor(payload: Payload<TData>) {
-    super(payload, HttpStatus.TEMPORARY_REDIRECT);
-  }
-}
-
-export class PayloadTooLarge<TData> extends BaseException<TData> {
-  constructor(payload: Payload<TData>) {
-    super(
-      payload,
-      HttpStatus.PAYLOAD_TOO_LARGE,
-      'Data exceeds the allowed size',
-    );
-  }
-}
-
-export class FailedDependency<TData> extends BaseException<TData> {
-  constructor(payload: Payload<TData>) {
-    super(
-      payload,
-      HttpStatus.FAILED_DEPENDENCY,
-      'The request failed due to failure of a previous request.',
-    );
-  }
-}
-
-export class ValidationPartialError<TData> extends BadRequest<TData> {
-  constructor(payload: Payload<TData>) {
-    super({
-      errorCode: VALIDATION,
-      ...payload,
-    });
   }
 }
 

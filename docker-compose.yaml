@@ -1,41 +1,22 @@
-version: '3.8'
+version: '3.3'
 
 services:
-  postgres:
-    container_name: postgres_db
-    image: postgres
+  database:
+    container_name: pg_db
+    image: postgres:13.6-alpine
+    restart: always
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      PGDATA: /data/postgres
-    volumes:
-      - postgres:/data/postgres
+      TZ: 'Asia/Ho_Chi_Minh'
+      PGTZ: 'Asia/Ho_Chi_Minh'
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
     ports:
-      - '5432:5432'
-    networks:
-      - postgres
-    restart: unless-stopped
-
-  pgadmin:
-    container_name: pgadmin_container
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      - ${DB_PORT}:5432
     volumes:
-      - pgadmin:/var/lib/pgadmin
-
-    ports:
-      - '${PGADMIN_PORT:-5050}:80'
-    networks:
-      - postgres
-    restart: unless-stopped
-
-networks:
-  postgres:
-    driver: bridge
-
-volumes:
-  postgres:
-  pgadmin:
+      - ./docker/db/postgres/data/:/var/lib/postgresql/data
+      - ./docker/db/postgres/postgres.conf:/etc/postgresql/postgresql.conf
+      - ./docker/db/postgres/init/:/docker-entrypoint-initdb.d
+    env_file:
+      - .env

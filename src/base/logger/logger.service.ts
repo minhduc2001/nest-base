@@ -1,63 +1,68 @@
-import { Injectable } from '@nestjs/common';
-import { Appender, configure, Logger } from 'log4js';
+import { Injectable, Logger } from '@nestjs/common';
+import { configure, getLogger } from 'log4js';
 
-const appenders: Record<string, Appender> = {
+import { config } from '@base/config';
+
+const level = config.DEBUG ? 'debug' : 'info';
+const appenders = {
   console: {
     type: 'console',
   },
   file: {
     type: 'file',
-    filename: 'logs/combind.log',
+    filename: 'logs/combined.log',
     pattern: '-yyyy-MM-dd',
     maxLogSize: 1024 * 1024 * 10, // 10 MB
     backups: 3,
   },
-  access: {
-    type: 'console',
-  },
+};
+
+const categories = {
+  default: { appenders: ['console', 'file'], level: level },
 };
 
 @Injectable()
-export class LoggerService {
-  private logger: Logger;
-
+export class LoggerService extends Logger {
   constructor() {
-    const level = config.DEBUG ? 'debug' : 'info';
-
     configure({
       appenders: appenders,
-      categories: {
-        default: {
-          appenders: ['console', 'file'],
-          level: level,
-          enableCallStack: true,
-        },
-        access: {
-          appenders: ['access', 'file'],
-          level: 'info',
-          enableCallStack: true,
-        },
-      },
+      categories: categories,
     });
+    super();
   }
 
-  debug(message: string) {
-    this.logger.debug(message);
+  getLogger = getLogger;
+
+  private _access = () => {
+    const logger = this.getLogger('access');
+    return {
+      write: logger.info.bind(logger),
+    };
+  };
+
+  logger = {
+    default: getLogger('default'),
+    access: this._access(),
+    thirdParty: getLogger('thirdParty'),
+  };
+
+  error(message: string, trace?: string, context?: string): void {
+    super.error(message, trace, context);
   }
 
-  info(message: string) {
-    this.logger.info(message);
+  warn(message: string, context?: string): void {
+    super.warn(message, context);
   }
 
-  warn(message: string) {
-    this.logger.warn(message);
+  log(message: string, context?: string): void {
+    super.log(message, context);
   }
 
-  error(message: string, trace?: string) {
-    this.logger.error(message, trace);
+  debug(message: string, context?: string): void {
+    super.debug(message, context);
   }
 
-  fatal(message: string, trace?: string) {
-    this.logger.fatal(message, trace);
+  verbose(message: string, context?: string): void {
+    super.verbose(message, context);
   }
 }
