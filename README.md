@@ -24,39 +24,70 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Nest Base
+
+## Features
+
+## Technologies stack:
+
+- JWT
+- Bcrypt
+- TypeORM + Postgres
+- Docker
 
 ## Installation
 
+### 1. Install the required dependencies
+
 ```bash
-$ yarn install
+$ yarn
 ```
 
-## Running the app
+### 2. Rename the .env.example filename to .env and set your local variables
+
+```bash
+$ mv .env.example .env
+```
+
+### 3. Running the app
 
 ```bash
 # development
-$ yarn run start
+$ yarn start
 
 # watch mode
-$ yarn run start:dev
+$ yarn start:dev
 
 # production mode
-$ yarn run start:prod
+$ yarn start:prod
 ```
 
 ## Test
 
 ```bash
 # unit tests
-$ yarn run test
+$ yarn test
 
 # e2e tests
-$ yarn run test:e2e
+$ yarn test:e2e
 
 # test coverage
-$ yarn run test:cov
+$ yarn test:cov
 ```
+
+## Docker for development
+
+```bash
+# start the application
+$ npm run docker:up
+
+# stop the application
+$ npm run docker:down
+```
+
+## Swagger documentation
+
+- [localhost:8080/docs](http://localhost:8080/apidoc)
 
 ## Support
 

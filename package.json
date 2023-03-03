@@ -20,7 +20,9 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "prepare": "husky install",
     "prettier": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
-    "prettier:fix": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\""
+    "prettier:fix": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "docker:up": "docker-compose up -d -V --build",
+    "docker:down": "docker-compose down"
   },
   "lint-staged": {
     "\"src/**/*.ts\" \"test/**/*.ts\"": "prettier --check"
