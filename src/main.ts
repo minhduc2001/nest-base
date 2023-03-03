@@ -40,6 +40,7 @@ async function bootstrap() {
     .setTitle('Cats example')
     .setDescription('The cats API description')
     .setVersion('1.0')
+    .addBearerAuth()
     .addServer(`http://localhost:${config.PORT}`, 'local')
     .build();
   const document = SwaggerModule.createDocument(app, configSwagger);

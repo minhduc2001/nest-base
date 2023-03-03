@@ -19,6 +19,10 @@ export class ConfigService {
   DB_USERNAME = _process.env.DB_USERNAME;
   DB_HOST = _process.env.DB_HOST;
   DB_PORT = Number(_process.env.DB_PORT);
+
+  // jwt
+  JWT_SECRET = _process.env.JWT_SECRET;
+  JWT_RT_SECRET = _process.env.JWT_RT_SECRET;
 }
 
 export const config = new ConfigService();
