@@ -1,62 +1,41 @@
-// import { FindManyOptions, Repository } from 'typeorm';
+import { paginate, PaginateConfig, PaginateQuery } from 'nestjs-paginate';
+import { FindManyOptions, Repository, SelectQueryBuilder } from 'typeorm';
 
-// export class PaginationOptions {
-//   page?: number = 1;
-//   limit?: number = 10;
-//   sort?: string = 'createdAt';
-//   order?: 'ASC' | 'DESC' = 'DESC';
-// }
+export abstract class BaseService<T> {
+  protected constructor(protected readonly repository: Repository<T>) {}
 
-// export abstract class BasePaginationService<T> {
-//   constructor(protected readonly repository: Repository<T>) {}
+  async listWithPage(
+    query: PaginateQuery,
+    config: PaginateConfig<T>,
+    customQuery?: Repository<T> | SelectQueryBuilder<T>,
+  ) {
+    if (customQuery) {
+      return paginate<T>(query, customQuery, config);
+    }
+    return paginate<T>(query, this.repository, config);
+  }
 
-//   async findAllWithOptions(
-//     paginationOptions: PaginationOptions,
-//     filter?: FindManyOptions<T>,
-//   ): Promise<{ data: T[]; count: number }> {
-//     const { page, limit, sort, order } = paginationOptions;
-//     const skip = (page - 1) * limit;
-//     const [data, count] = await this.repository.findAndCount({
-//       ...filter,
-//       skip,
-//       take: limit,
-//       order: {
-//         [sort]: order,
-//       },
-//     });
-//     return { data, count };
-//   }
-// }
+  async findAll(options?: FindManyOptions<T>): Promise<T[]> {
+    return await this.repository.find(options);
+  }
 
-// export abstract class BaseCrudService<T> {
-//   constructor(protected readonly repository: Repository<T>) {}
+  async findAndCount(options?: FindManyOptions<T>): Promise<[T[], number]> {
+    return await this.repository.findAndCount(options);
+  }
 
-//   async findAll(filter: FindManyOptions<T>): Promise<T[]> {
-//     return this.repository.find(filter);
-//   }
+  //   async findById(id: number): Promise<T> {
+  //     return await this.repository.findOne({ where: { id: id } });
+  //   }
 
-//   async findOne(id: string): Promise<T> {
-//     return this.repository.findOne(id);
-//   }
+  async create(entity: T): Promise<T> {
+    return await this.repository.save(entity);
+  }
 
-//   async create(data: Partial<T>): Promise<T> {
-//     const newEntity = this.repository.create(data);
-//     return this.repository.save(newEntity);
-//   }
+  async update(entity: T): Promise<T> {
+    return await this.repository.save(entity);
+  }
 
-//   async update(id: string, data: Partial<T>): Promise<T> {
-//     const entity = await this.repository.findOne(id);
-//     if (!entity) {
-//       throw new Error(`Entity with id ${id} not found`);
-//     }
-//     this.repository.merge(entity, data);
-//     return this.repository.save(entity);
-//   }
-
-//   async delete(id: string): Promise<void> {
-//     const result = await this.repository.delete(id);
-//     if (result.affected === 0) {
-//       throw new Error(`Entity with id ${id} not found`);
-//     }
-//   }
-// }
+  async delete(id: number): Promise<void> {
+    await this.repository.delete(id);
+  }
+}

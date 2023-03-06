@@ -13,7 +13,7 @@ import { RoleModule } from './role/role.module';
 
 // SHARED
 
-const appModule = [AuthModule, UserModule];
+const appModule = [AuthModule, UserModule, RoleModule];
 const baseModule = [LoggerModule];
 
 @Module({

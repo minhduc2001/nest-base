@@ -17,10 +17,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
-
     const status = exception.getStatus();
-    let excResponse = exception.getResponse();
 
+    let excResponse = exception.getResponse();
     excResponse = new exc.BadRequest({
       errorCode: exc.STATUS_CODE_MAP[status] ?? exc.UNKNOWN,
       statusCode: status,

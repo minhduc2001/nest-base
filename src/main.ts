@@ -41,11 +41,12 @@ async function bootstrap() {
     .setDescription('The cats API description')
     .setVersion('1.0')
     .addBearerAuth()
-    .addServer(`http://localhost:${config.PORT}`, 'local')
+    .addServer(`http://localhost:${config.PORT}/api/v1`, 'local')
     .build();
   const document = SwaggerModule.createDocument(app, configSwagger);
   SwaggerModule.setup('apidoc', app, document);
 
+  app.setGlobalPrefix('api/v1');
   await app.listen(config.PORT, () => {
     logger.log(`server is starting on port ${config.PORT}`);
   });

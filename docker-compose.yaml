@@ -2,7 +2,7 @@ version: '3.3'
 
 services:
   database:
-    container_name: pg_db
+    container_name: database
     image: postgres:13.6-alpine
     restart: always
     environment:
@@ -20,31 +20,29 @@ services:
       - ./docker/db/postgres/init/:/docker-entrypoint-initdb.d
     env_file:
       - .env
+#   app:
+#     container_name: nest-base
+#     image: nest-base
+#     restart: unless-stopped
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#       target: development # Only will build development stage from our dockerfile
+#     volumes:
+#       - ./:/usr/src/app
+#     ports:
+#       - ${PORT}:${PORT}
+#     networks:
+#       - app-intranet
+#     env_file:
+#       - .env # Available inside container not in compose file
+#     environment:
+#       - DB_HOST=database
+#     command: npm run start:dev # Run in development mode
+#     depends_on:
+#       - database
 
-  nest-base:
-    container_name: nest-base
-    image: nest-base
-    restart: unless-stopped
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: development # Only will build development stage from our dockerfile
-    volumes:
-      - ./:/usr/src/app
-    ports:
-      - ${PORT}:${PORT}
-    networks:
-      - nestjs-auth-intranet
-    env_file:
-      - .env # Available inside container not in compose file
-    environment:
-      - DB_HOST=database
-    depends_on:
-      data:
-        condition: service_healthy
-    command: npm run start:dev # Run in development mode
-
-networks:
-  nest-base-intranet:
-    name: nest-base-intranet
-    driver: bridge
+# networks:
+#   app-intranet:
+#     name: app-intranet
+#     driver: bridge
