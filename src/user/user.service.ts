@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { PaginateConfig } from 'nestjs-paginate';
 
 // BASE
 import * as exc from '@/base/api/exception.reslover';
+import { LoggerService } from '@base/logger';
+import { BaseService } from '@/base/service/base.service';
 
 // APPS
 import { User } from '@/user/entities/user.entity';
@@ -11,13 +14,6 @@ import {
   ICreateUser,
   IUserGetByUniqueKey,
 } from '@/user/interfaces/user.interface';
-import { BaseService } from '@/base/service/base.service';
-import {
-  paginate,
-  PaginateQuery,
-  Paginated,
-  PaginateConfig,
-} from 'nestjs-paginate';
 import { ListUserDto } from './dtos/user.dto';
 
 @Injectable()
@@ -25,9 +21,12 @@ export class UserService extends BaseService<User> {
   constructor(
     @InjectRepository(User)
     protected readonly repository: Repository<User>,
+    private readonly loggerService: LoggerService,
   ) {
     super(repository);
   }
+
+  logger = this.loggerService.getLogger(UserService.name);
 
   getUserByUniqueKey(option: IUserGetByUniqueKey): Promise<User> {
     const findOption: Record<string, any>[] = Object.entries(option).map(

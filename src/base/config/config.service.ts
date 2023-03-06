@@ -23,6 +23,10 @@ export class ConfigService {
   // jwt
   JWT_SECRET = _process.env.JWT_SECRET;
   JWT_RT_SECRET = _process.env.JWT_RT_SECRET;
+
+  // mailer
+  EMAIL = _process.env.EMAIL;
+  MAIL_PASSWORD = _process.env.MAIL_PASSWORD;
 }
 
 export const config = new ConfigService();
