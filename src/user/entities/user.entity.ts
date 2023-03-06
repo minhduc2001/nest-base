@@ -1,8 +1,11 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, ManyToMany } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import * as bcrypt from 'bcrypt';
 import { ERole } from '@/role/enum/roles.enum';
 import { AbstractEntity } from '@/base/service/abstract-entity.service';
+import { Permission } from '@/role/entities/permission.entity';
+import { JoinTable } from 'typeorm';
+import { EState } from '@shared/enum/common.enum';
 
 @Entity()
 export class User extends AbstractEntity {
@@ -18,6 +21,13 @@ export class User extends AbstractEntity {
 
   @Column({ nullable: true, type: 'enum', enum: ERole, default: ERole.Guest })
   role: ERole;
+
+  @ManyToMany(() => Permission, (permission) => permission)
+  @JoinTable()
+  permissions: Permission[];
+
+  @Column({ type: 'enum', enum: EState, default: EState.Active })
+  state: EState;
 
   setPassword(password: string) {
     this.password = bcrypt.hashSync(password, 10);

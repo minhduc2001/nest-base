@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
-import { RoleService } from './role.service';
-import { RoleController } from './role.controller';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from '@/role/roles.guard';
+import { PermissionGuard } from '@/role/permission.guard';
+import { RoleService } from './role.service';
+import { RoleController } from './role.controller';
 
 @Module({
   providers: [
@@ -10,6 +11,10 @@ import { RolesGuard } from '@/role/roles.guard';
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PermissionGuard,
     },
   ],
   controllers: [RoleController],
