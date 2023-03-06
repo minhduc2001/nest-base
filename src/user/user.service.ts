@@ -54,8 +54,6 @@ export class UserService extends BaseService<User> {
   }
 
   async getAllUser(query: ListUserDto) {
-    console.log(query);
-
     const config: PaginateConfig<User> = {
       searchableColumns: ['id'],
       sortableColumns: ['id'],

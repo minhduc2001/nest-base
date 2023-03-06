@@ -87,7 +87,7 @@ $ npm run docker:down
 
 ## Swagger documentation
 
-- [localhost:8080/docs](http://localhost:8080/apidoc)
+- [localhost:8080/api/v1/apidoc](http://localhost:8080/api/v1/apidoc)
 
 ## Support
 

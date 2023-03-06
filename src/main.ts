@@ -15,6 +15,7 @@ import { LoggerService } from '@base/logger/logger.service';
 import { config } from '@base/config';
 
 import { AppModule } from './app.module';
+import { SwaggerConfig } from '@base/swagger/swagger.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -35,18 +36,10 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
+  const apiVersion = '1';
+  SwaggerConfig(app, apiVersion);
 
-  const configSwagger = new DocumentBuilder()
-    .setTitle('Cats example')
-    .setDescription('The cats API description')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .addServer(`http://localhost:${config.PORT}/api/v1`, 'local')
-    .build();
-  const document = SwaggerModule.createDocument(app, configSwagger);
-  SwaggerModule.setup('apidoc', app, document);
-
-  app.setGlobalPrefix('api/v1');
+  app.setGlobalPrefix(`api/v${apiVersion}`);
   await app.listen(config.PORT, () => {
     logger.log(`server is starting on port ${config.PORT}`);
   });
