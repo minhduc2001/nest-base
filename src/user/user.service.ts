@@ -11,13 +11,23 @@ import {
   ICreateUser,
   IUserGetByUniqueKey,
 } from '@/user/interfaces/user.interface';
+import { BaseService } from '@/base/service/base.service';
+import {
+  paginate,
+  PaginateQuery,
+  Paginated,
+  PaginateConfig,
+} from 'nestjs-paginate';
+import { ListUserDto } from './dtos/user.dto';
 
 @Injectable()
-export class UserService {
+export class UserService extends BaseService<User> {
   constructor(
     @InjectRepository(User)
-    private readonly repository: Repository<User>,
-  ) {}
+    protected readonly repository: Repository<User>,
+  ) {
+    super(repository);
+  }
 
   getUserByUniqueKey(option: IUserGetByUniqueKey): Promise<User> {
     const findOption: Record<string, any>[] = Object.entries(option).map(
@@ -37,13 +47,20 @@ export class UserService {
     return this.repository.findOne({ where: { id: id } });
   }
 
-  async createUser(dto: ICreateUser) {
-    const user: User = this.repository.create(dto);
-    user.setPassword(dto.password);
+  async createUser(data: ICreateUser) {
+    const user: User = this.repository.create(data);
+    user.setPassword(data.password);
     await user.save();
   }
 
-  async getAllUser() {
-    return this.repository.find();
+  async getAllUser(query: ListUserDto) {
+    console.log(query);
+
+    const config: PaginateConfig<User> = {
+      searchableColumns: ['id'],
+      sortableColumns: ['id'],
+    };
+
+    return this.listWithPage(query, config);
   }
 }
