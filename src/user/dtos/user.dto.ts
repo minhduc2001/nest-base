@@ -20,3 +20,17 @@ export class CreateUserDto {
 }
 
 export class ListUserDto extends ListDto {}
+
+export class UploadAvatarDto {
+  @ApiProperty({ required: false })
+  @IsString()
+  name: string;
+
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    description: 'File to upload',
+  })
+  @IsOptional()
+  file: string;
+}

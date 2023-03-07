@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import * as ip from 'ip';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config();
 
@@ -12,6 +13,9 @@ export class ConfigService {
   DEBUG = (_process.env.DEBUG ?? 'false').toLowerCase() !== 'false';
 
   PORT = _process.env.PORT ?? 8080;
+
+  IP = ip.address();
+  API_VERSION = '1';
 
   // db
   DB_DATABASE = _process.env.DB_DATABASE;
@@ -27,6 +31,10 @@ export class ConfigService {
   // mailer
   EMAIL = _process.env.EMAIL;
   MAIL_PASSWORD = _process.env.MAIL_PASSWORD;
+
+  // file
+  MAX_FILE_SIZE = 10000000; // 10MB;
+  UPLOAD_LOCATION = 'uploads';
 }
 
 export const config = new ConfigService();
