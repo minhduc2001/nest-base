@@ -14,7 +14,8 @@ import {
   ICreateUser,
   IUserGetByUniqueKey,
 } from '@/user/interfaces/user.interface';
-import { ListUserDto } from './dtos/user.dto';
+
+import { ListUserDto, UploadAvatarDto } from './dtos/user.dto';
 
 @Injectable()
 export class UserService extends BaseService<User> {
@@ -59,5 +60,9 @@ export class UserService extends BaseService<User> {
     };
 
     return this.listWithPage(query, config);
+  }
+
+  async uploadAvatar(dto: UploadAvatarDto) {
+    console.log(dto);
   }
 }

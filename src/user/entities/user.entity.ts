@@ -19,7 +19,13 @@ export class User extends AbstractEntity {
   @Column({ nullable: true, unique: true })
   email: string;
 
-  @Column({ nullable: true, type: 'enum', enum: ERole, default: ERole.Guest })
+  @Column({ nullable: true })
+  avatar: string;
+
+  @Column({ nullable: true })
+  background: string;
+
+  @Column({ nullable: false, type: 'enum', enum: ERole, default: ERole.Guest })
   role: ERole;
 
   @ManyToMany(() => Permission, (permission) => permission)

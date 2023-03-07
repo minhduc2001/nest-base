@@ -22,7 +22,7 @@ async function bootstrap() {
   const loggerService = app.get(LoggerService);
   const logger = loggerService.getLogger();
 
-  app.use(`/uploads`, express.static('/uploads'));
+  app.use(`/uploads`, express.static('uploads'));
   app.use(bodyParser.json({ limit: '10mb' }));
   app.use(morgan('dev'));
 
@@ -36,10 +36,9 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
-  const apiVersion = '1';
-  SwaggerConfig(app, apiVersion);
+  SwaggerConfig(app, config.API_VERSION);
 
-  app.setGlobalPrefix(`api/v${apiVersion}`);
+  app.setGlobalPrefix(`api/v${config.API_VERSION}`);
   await app.listen(config.PORT, () => {
     logger.log(`server is starting on port ${config.PORT}`);
   });
