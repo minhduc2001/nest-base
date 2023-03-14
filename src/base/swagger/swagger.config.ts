@@ -9,6 +9,7 @@ export const SwaggerConfig = (app: INestApplication, apiVersion: string) => {
     .setVersion('1.0')
     .addBearerAuth()
     .addServer(`http://localhost:${config.PORT}/api/v${apiVersion}`, 'local')
+    .addServer(`${config.IP}:${config.PORT}/api/v${apiVersion}`, 'server')
     .build();
 
   const document = SwaggerModule.createDocument(app, options);

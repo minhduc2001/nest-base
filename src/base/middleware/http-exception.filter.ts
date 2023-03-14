@@ -18,24 +18,38 @@ export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
-    const status = exception.getStatus();
+    if (!('response' in exception)) {
+      this.logger = this.loggerService.getLogger('unknown-exception');
 
-    let excResponse = exception.getResponse();
-    if (
-      (config.FIXED_STATUS_CODE && typeof excResponse !== 'object') ||
-      !Object.getOwnPropertyDescriptor(excResponse, 'success')
-    ) {
-      excResponse = new exc.BadRequest({
-        errorCode: exc.STATUS_CODE_MAP[status] ?? exc.UNKNOWN,
-        statusCode: status,
-        message:
-          typeof excResponse === 'object'
-            ? excResponse['message']
-            : excResponse,
-        data: typeof excResponse === 'object' ? excResponse['data'] : null,
+      const e = new exc.BusinessException({
+        errorCode: exc.SYSTEM_ERROR,
       }).getResponse();
+
+      this.logger.error(exception);
+      response.status(500).json(e);
+    } else {
+      const status = exception.getStatus();
+
+      let excResponse = exception.getResponse();
+      if (
+        (config.FIXED_STATUS_CODE && typeof excResponse !== 'object') ||
+        !Object.getOwnPropertyDescriptor(excResponse, 'success')
+      ) {
+        excResponse = new exc.BadRequest({
+          errorCode: exc.STATUS_CODE_MAP[status] ?? exc.UNKNOWN,
+          statusCode: status,
+          message:
+            typeof excResponse === 'object'
+              ? excResponse['message']
+              : { excResponse },
+          data: typeof excResponse === 'object' ? excResponse['data'] : null,
+        }).getResponse();
+      } else {
+        excResponse['statusCode'] = status;
+      }
+
+      this.logger.error(excResponse?.['message']);
+      response.status(status).json(excResponse);
     }
-    this.logger.error(excResponse?.['message']);
-    response.status(status).json(excResponse);
   }
 }
