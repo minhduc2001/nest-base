@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { PaginateConfig } from 'nestjs-paginate';
 
 // BASE
 import * as exc from '@/base/api/exception.reslover';
@@ -16,6 +15,7 @@ import {
 } from '@/user/interfaces/user.interface';
 
 import { ListUserDto, UploadAvatarDto } from './dtos/user.dto';
+import { PaginateConfig } from '@base/service/paginate/paginate';
 
 @Injectable()
 export class UserService extends BaseService<User> {
@@ -55,7 +55,7 @@ export class UserService extends BaseService<User> {
 
   async getAllUser(query: ListUserDto) {
     const config: PaginateConfig<User> = {
-      searchableColumns: ['id'],
+      searchableColumns: ['username'],
       sortableColumns: ['id'],
     };
 
