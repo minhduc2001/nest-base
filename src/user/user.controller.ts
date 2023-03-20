@@ -22,7 +22,6 @@ import { ListUserDto, UploadAvatarDto } from './dtos/user.dto';
 import { Permissions } from '@/role/permission.decorator';
 import { PERMISSIONS } from '@shared/constants/permission.constant';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { uploadUrl } from '@base/helper/url.helper';
 
 @Controller('user')
 @ApiBearerAuth()
