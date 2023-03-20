@@ -1,3 +1,4 @@
+// copyright belongs to pettzold/nestjs-paginate, edited by minhduc2001
 import {
   Repository,
   SelectQueryBuilder,
