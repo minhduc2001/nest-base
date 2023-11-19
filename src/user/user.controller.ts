@@ -5,6 +5,7 @@ import {
   Post,
   Query,
   UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -18,10 +19,10 @@ import { Roles } from '@/role/roles.decorator';
 import { ERole } from '@/role/enum/roles.enum';
 import { Public } from '@/auth/decorator/public.decorator';
 import { JwtAuthGuard } from '@/auth/guard/jwt-auth.guard';
-import { ListUserDto, UploadAvatarDto } from './dtos/user.dto';
+import { ListUserDto, UploadAvatarDto, UploadImagesDto } from './dtos/user.dto';
 import { Permissions } from '@/role/permission.decorator';
 import { PERMISSIONS } from '@shared/constants/permission.constant';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('user')
 @ApiBearerAuth()
@@ -42,11 +43,12 @@ export class UserController {
   @Post()
   @Public()
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FilesInterceptor('files', 10))
   uploadFile(
-    @Body() dto: UploadAvatarDto,
-    @UploadedFile() file: Express.Multer.File,
+    @Body() dto: UploadImagesDto,
+    @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
-    return this.userService.uploadAvatar({ ...dto, file: file.filename });
+    const data = files.map((file) => file.filename);
+    return this.userService.createUser(data);
   }
 }
