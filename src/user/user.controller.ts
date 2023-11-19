@@ -43,7 +43,7 @@ export class UserController {
   @Post()
   @Public()
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FilesInterceptor('files', 10))
+  @UseInterceptors(FilesInterceptor('images', 10))
   uploadFile(
     @Body() dto: UploadImagesDto,
     @UploadedFiles() files: Array<Express.Multer.File>,
