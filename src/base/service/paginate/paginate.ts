@@ -33,8 +33,8 @@ const logger: Logger = new Logger('nestjs-paginate');
 export { FilterOperator, FilterSuffix };
 
 export class Paginated<T> {
-  data: T[];
-  meta: {
+  results: T[];
+  metadata: {
     itemsPerPage: number;
     totalItems: number;
     currentPage: number;
@@ -65,7 +65,7 @@ export interface PaginateConfig<T> {
   origin?: string;
 }
 
-export const DEFAULT_MAX_LIMIT = 100;
+export const DEFAULT_MAX_LIMIT = 10000;
 export const DEFAULT_LIMIT = 20;
 export const NO_PAGINATION = 0;
 
@@ -111,7 +111,7 @@ export async function paginate<T extends ObjectLiteral>(
   }
 
   if (isPaginated) {
-    queryBuilder.limit(limit).offset((page - 1) * limit);
+    queryBuilder.take(limit).skip((page - 1) * limit);
   }
 
   if (config.relations) {
@@ -310,9 +310,23 @@ export async function paginate<T extends ObjectLiteral>(
 
   const totalPages = isPaginated ? Math.ceil(totalItems / limit) : 1;
 
+  // const results: Paginated<T> = {
+  //   data: items,
+  //   meta: {
+  //     itemsPerPage: isPaginated ? limit : items.length,
+  //     totalItems: isPaginated ? totalItems : items.length,
+  //     currentPage: page,
+  //     totalPages,
+  //     sortBy,
+  //     search: query.search,
+  //     searchBy: query.search ? searchBy : undefined,
+  //     filter: query.filter,
+  //   },
+  // };
+
   const results: Paginated<T> = {
-    data: items,
-    meta: {
+    results: items,
+    metadata: {
       itemsPerPage: isPaginated ? limit : items.length,
       totalItems: isPaginated ? totalItems : items.length,
       currentPage: page,
