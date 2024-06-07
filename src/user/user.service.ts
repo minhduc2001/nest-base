@@ -3,19 +3,16 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 // BASE
-import * as exc from '@/base/api/exception.reslover';
 import { LoggerService } from '@base/logger';
 import { BaseService } from '@/base/service/base.service';
 
 // APPS
-import { User } from '@/user/entities/user.entity';
-import {
-  ICreateUser,
-  IUserGetByUniqueKey,
-} from '@/user/interfaces/user.interface';
-
-import { ListUserDto, UploadAvatarDto } from './dtos/user.dto';
-import { PaginateConfig } from '@base/service/paginate/paginate';
+import User from './entities/user.entity';
+import { Request } from 'express';
+import { LoginDto } from '@/auth/dtos/login.dto';
+import { I18nContext } from 'nestjs-i18n';
+import { NotAcceptable, NotFound } from '@/base/api/exception.reslover';
+import { UserStatus } from './user.constant';
 
 @Injectable()
 export class UserService extends BaseService<User> {
@@ -29,16 +26,6 @@ export class UserService extends BaseService<User> {
 
   logger = this.loggerService.getLogger(UserService.name);
 
-  getUserByUniqueKey(option: IUserGetByUniqueKey): Promise<User> {
-    const findOption: Record<string, any>[] = Object.entries(option).map(
-      ([key, value]) => ({ [key]: value }),
-    );
-    return this.repository
-      .createQueryBuilder('user')
-      .where(findOption)
-      .getOne();
-  }
-
   async findOne(username: string): Promise<User | undefined> {
     return this.repository.findOne({ where: { username: username } });
   }
@@ -47,22 +34,25 @@ export class UserService extends BaseService<User> {
     return this.repository.findOne({ where: { id: id } });
   }
 
-  async createUser(data: ICreateUser) {
-    const user: User = this.repository.create(data);
-    user.setPassword(data.password);
-    await user.save();
+  async getUserWithStrategy(id: number, request: Request): Promise<User> {
+    return null;
   }
 
-  async getAllUser(query: ListUserDto) {
-    const config: PaginateConfig<User> = {
-      searchableColumns: ['username'],
-      sortableColumns: ['id'],
-    };
+  async getUserForLogin(
+    { username, password }: LoginDto,
+    i18n: I18nContext,
+  ): Promise<User> {
+    const user: User = await this.repository.findOne({
+      where: { username },
+      select: ['id', 'password', 'email', 'status'],
+    });
+    if (!user) return NotFound('user', i18n);
+    if (!user.comparePassword(password)) return NotFound('user', i18n);
 
-    return this.listWithPage(query, config);
-  }
+    if (user?.status !== UserStatus.ACTIVE) {
+      return NotAcceptable('user.inactive', i18n);
+    }
 
-  async uploadAvatar(dto: UploadAvatarDto) {
-    console.log(dto);
+    return user;
   }
 }

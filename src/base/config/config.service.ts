@@ -13,9 +13,16 @@ export class ConfigService {
   DEBUG = (_process.env.DEBUG ?? 'false').toLowerCase() !== 'false';
 
   PORT = _process.env.PORT ?? 8080;
-
   IP = ip.address();
-  API_VERSION = '1';
+  API_VERSION = _process.env.API_VERSION;
+  IS_PRODUCTION = _process.env.NODE_ENV === 'production';
+  NODE_ENV = _process.env.NODE_ENV;
+  BEARER_TEST = {};
+  PASSWORD_SALT = 10;
+
+  APP = {
+    PRODUCT_NAME: _process.env.PRODUCT_NAME,
+  };
 
   // db
   DB_DATABASE = _process.env.DB_DATABASE;

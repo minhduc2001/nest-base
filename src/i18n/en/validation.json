@@ -1,0 +1,5 @@
+{
+  "file.not_valid": "Unsupported file type {extname}",
+  "email.not_valid": "Email does not valid",
+  "phone.not_valid": "Phone does not valid"
+}

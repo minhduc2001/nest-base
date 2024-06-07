@@ -2,17 +2,17 @@ import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { EState } from '@shared/enum/common.enum';
-import { User } from '@/user/entities/user.entity';
-import { Permission } from '@/role/entities/permission.entity';
+import User from '@/user/entities/user.entity';
+import Permission from '@/permission/entities/permission.entity';
+import { UserStatus } from '@/user/user.constant';
 
-const permissionGroup = [1];
-const data = [
+const data: Partial<User>[] = [
   {
     username: 'admin',
     email: 'admin@admin.com',
-    password: '$2b$10$VU9fAWrF61xLIUkJKf5vBuBCh4RzdCFNekqLppKhk01/WwTx3BBFK',
-    state: EState.Active,
+    password: '123123',
+    full_name: 'Ngô Minh Đức',
+    status: UserStatus.ACTIVE,
   },
 ];
 @Injectable()
@@ -28,14 +28,9 @@ export class UserSeed {
     const count = await this.repository.count();
     if (!count) {
       for (const user of data) {
-        const permissions: Permission[] = await this.permissionRepository.find({
-          where: { id: 1 },
-        });
-
-        await this.repository.save({
-          ...user,
-          permissions: permissions,
-        });
+        const _user = this.repository.create(user);
+        _user.setPassword(user.password);
+        await _user.save();
       }
     }
   }

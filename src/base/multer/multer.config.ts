@@ -1,9 +1,10 @@
 import { extname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { diskStorage } from 'multer';
-import * as exc from '@base/api/exception.reslover';
 import { config } from '@/config';
 import { makeUUID } from '@base/helper/function.helper';
+import { UnsupportedMediaTypeException } from '@nestjs/common';
+import { i18nValidationMessage } from 'nestjs-i18n';
 
 export const multerConfig = {
   dest: config.UPLOAD_LOCATION,
@@ -24,27 +25,27 @@ export const multerOptions = {
       // Allow storage of file
       cb(null, true);
     } else {
-      // Reject file
       cb(
-        new exc.UnsupportedMediaType({
-          message: `Unsupported file type ${extname(file.originalname)}`,
+        new UnsupportedMediaTypeException({
+          message: i18nValidationMessage('validation.match_enum', {
+            extname: extname(file.originalname),
+          }),
         }),
         false,
       );
     }
   },
+
   // Storage properties
   storage: diskStorage({
-    // Destination storage path details
     destination: (req: any, file: any, cb: any) => {
       const uploadPath = multerConfig.dest;
-      // Create folder if doesn't exist
+
       if (!existsSync(uploadPath)) {
         mkdirSync(uploadPath);
       }
       cb(null, uploadPath);
     },
-    // File modification details
     filename: (req: any, file: any, cb: any) => {
       // Calling the callback passing the random name generated with the original extension name
       cb(null, `${makeUUID(file.originalname)}`);

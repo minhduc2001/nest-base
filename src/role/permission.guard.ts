@@ -1,7 +1,12 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Forbidden } from '@/base/api/exception.reslover';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
-import * as exc from '@base/api/exception.reslover';
 @Injectable()
 export class PermissionGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
@@ -23,11 +28,7 @@ export class PermissionGuard implements CanActivate {
       permissions?.includes(permission),
     );
 
-    if (!hasPermission)
-      throw new exc.BadRequest({
-        message: 'Permission denied!',
-        statusCode: 400,
-      });
+    if (!hasPermission) throw new ForbiddenException();
     return true;
   }
 }

@@ -1,42 +1,82 @@
-import { Column, Entity, ManyToMany } from 'typeorm';
-import { Exclude } from 'class-transformer';
-import * as bcrypt from 'bcrypt';
-import { ERole } from '@/role/enum/roles.enum';
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  Index,
+  JoinTable,
+  ManyToMany,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import * as bcrypt from 'bcryptjs';
+
+import UserPermission from './user-permission.entity';
+import { UserStatus } from '../user.constant';
+import Role from '@/role/entities/role.entity';
+import Permission from '@/permission/entities/permission.entity';
+import { config } from '@/base/config';
+import Authenticate from '@/auth/entities/auth.entity';
 import { AbstractEntity } from '@/base/service/abstract-entity.service';
-import { Permission } from '@/role/entities/permission.entity';
-import { JoinTable } from 'typeorm';
-import { EState } from '@shared/enum/common.enum';
 
 @Entity()
-export class User extends AbstractEntity {
-  @Column({ nullable: false, unique: true })
+@Index(['username', 'email', 'deleted_at'], { unique: true })
+class User extends AbstractEntity {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
   username: string;
 
-  @Exclude({ toPlainOnly: true })
-  @Column()
-  password: string;
+  @Column({ nullable: true })
+  full_name: string;
 
-  @Column({ nullable: true, unique: true })
+  @Column({ default: '' })
   email: string;
 
   @Column({ nullable: true })
-  avatar: string;
+  email_verified_at: Date;
+
+  @Column({ default: '', select: false })
+  password: string;
+
+  is_init_password: boolean;
+
+  @Column({ default: UserStatus.ACTIVE, enum: UserStatus })
+  status: UserStatus;
+
+  @Column({ default: '', select: false })
+  google_id: string;
+
+  @Column({ default: '', select: false })
+  facebook_id: string;
+
+  @OneToMany(() => Authenticate, (auth) => auth.user)
+  auths: Authenticate[];
+
+  @Column({ nullable: true, default: new Date() })
+  first_login: Date;
 
   @Column({ nullable: true })
-  background: string;
+  last_login: Date;
 
-  @Column({ nullable: false, type: 'enum', enum: ERole, default: ERole.Guest })
-  role: ERole;
+  @ManyToMany(() => Role, (role) => role.users)
+  @JoinTable({
+    name: 'users_roles',
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
+  })
+  roles: Role[];
 
-  @ManyToMany(() => Permission, (permission) => permission)
-  @JoinTable()
+  @OneToMany(() => UserPermission, (up) => up.user)
+  users_to_permissions: UserPermission[];
+
   permissions: Permission[];
-
-  @Column({ type: 'enum', enum: EState, default: EState.Active })
-  state: EState;
+  password_expires_at: any;
 
   setPassword(password: string) {
-    this.password = bcrypt.hashSync(password, 10);
+    this.password = bcrypt.hashSync(password, config.PASSWORD_SALT);
   }
 
   comparePassword(rawPassword: string): boolean {
@@ -44,3 +84,5 @@ export class User extends AbstractEntity {
     return bcrypt.compareSync(rawPassword, userPassword);
   }
 }
+
+export default User;

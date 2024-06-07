@@ -1,0 +1,5 @@
+{
+  "file.not_valid": "Không hỗ trợ file {extname}",
+  "email.not_valid": "Email không đúng định dạng",
+  "phone.not_valid": "Số điện thoại không đúng định dạng"
+}

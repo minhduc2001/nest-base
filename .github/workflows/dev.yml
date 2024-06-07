@@ -1,0 +1,56 @@
+name: CI
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - production
+    types:
+      - closed
+  workflow_dispatch:
+
+jobs:
+  build:
+    needs: cancel
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy
+        if: github.ref == 'refs/heads/main'
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          port: ${{ secrets.PORT }}
+          password: ${{ secrets.PASSWORD }}
+          script: |
+            cd game-client-random-be
+            git pull origin main
+            docker compose up -d --build
+            docker image prune -a -f --filter until=48h
+            echo "Done!"
+
+      - name: On Failure
+        if: failure()
+        uses: tsickert/discord-webhook@v6.0.0
+        with:
+          webhook: ${{ secrets.DISCORD_URL }}
+
+  notification:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send Discord notification on success
+        uses: tsickert/discord-webhook@v6.0.0
+        if: success()
+        with:
+          webhook-url: ${{ secrets.WEBHOOKS_DISCORD }}
+          content: 'Backend! Your build was successful! Check it out'
+
+      - name: Send Discord notification on failure
+        uses: tsickert/discord-webhook@v6.0.0
+        if: failure()
+        with:
+          webhook-url: ${{ secrets.WEBHOOKS_DISCORD }}
+          content: 'Backend! Your build failed. Please review the logs.'

@@ -1,4 +1,4 @@
-version: '3.3'
+version: '3.6'
 
 services:
   database:
@@ -11,38 +11,29 @@ services:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_DATABASE}
-    command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
+    # command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
     ports:
       - ${DB_PORT}:5432
     volumes:
       - ./docker/db/postgres/data/:/var/lib/postgresql/data
-      - ./docker/db/postgres/postgres.conf:/etc/postgresql/postgresql.conf
-      - ./docker/db/postgres/init/:/docker-entrypoint-initdb.d
+      # - ./docker/db/postgres/postgres.conf:/etc/postgresql/postgresql.conf
+      # - ./docker/db/postgres/init/:/docker-entrypoint-initdb.d
     env_file:
       - .env
-#   app:
-#     container_name: nest-base
-#     image: nest-base
-#     restart: unless-stopped
-#     build:
-#       context: .
-#       dockerfile: Dockerfile
-#       target: development # Only will build development stage from our dockerfile
-#     volumes:
-#       - ./:/usr/src/app
-#     ports:
-#       - ${PORT}:${PORT}
-#     networks:
-#       - app-intranet
-#     env_file:
-#       - .env # Available inside container not in compose file
-#     environment:
-#       - DB_HOST=database
-#     command: npm run start:dev # Run in development mode
-#     depends_on:
-#       - database
 
-# networks:
-#   app-intranet:
-#     name: app-intranet
-#     driver: bridge
+  app:
+    container_name: nest-base
+    image: nest-base
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # target: development
+    # volumes:
+    #   - ./:/usr/src/app
+    ports:
+      - ${PORT}:${PORT}
+    env_file:
+      - .env # Available inside container not in compose file
+    depends_on:
+      - database

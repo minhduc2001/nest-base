@@ -1,204 +1,73 @@
-import fs = require('fs');
-import { HttpException, HttpStatus } from '@nestjs/common';
-import { ValidationError as NestValidationError } from '@nestjs/common';
-
-import { Payload, defaultPayload } from '@base/api/api.schema';
-
-/**
- * MODULE_ACTION_ERROR: xyz zzt
- * @param x {string}: module
- * @param y {number}: function
- * @param z {number}: error code in function
- * @param t {string}: first char of filename
- **/
-
-// 99**** GLOBAL
-export const SUCCESS = '000000';
-export const UNKNOWN = '999999';
-export const SYSTEM_ERROR = '990001';
-// export const REQUIRE_LOGIN = '000002';
-// export const UNKNOWN_METHOD = '000003';
-// export const SEARCH_CHECK_KEYWORD = '000006';
-// export const NOT_ENOUGH_PARAM = '000007';
-// export const UNAUTHORIZED = '000011';
-
-// 01**** VALIDATE
-export const VALIDATION = '010009';
-
-// 02**** DATABASE
-export const NOT_FOUND = '020008';
-export const DUPLICATE = '020010';
-export const PROTECTED = '020012';
-export const QUERY_DB_ERROR = '020013';
-
-// 03**** BASE API
-// 0001** CUSTOM APP API
-// 0002** CUSTOM APP SERVICE
-
-export const STATUS_CODE_MAP: Record<string, any> = {
-  [HttpStatus.NOT_FOUND]: NOT_FOUND,
-};
-
-const ALL_MESSAGES: Record<string, string> = {
-  [SUCCESS]: 'Success',
-  [UNKNOWN]: 'Unknown error',
-  [SYSTEM_ERROR]: 'Uh oh! Something went wrong. Please report to develop team.',
-  // [REQUIRE_LOGIN]: 'Required login ',
-  // [UNKNOWN_METHOD]: 'Unknown method',
-  // [SEARCH_CHECK_KEYWORD]: 'Search check keyword',
-  // [NOT_ENOUGH_PARAM]: 'Not enough param',
-  // [UNAUTHORIZED]: 'Unauthorized account',
-  [NOT_FOUND]: 'The requested information could not be found.',
-  [VALIDATION]: 'Invalid input data.',
-  [DUPLICATE]: 'Duplicate information.',
-};
-export const SUCCESS_MESSAGE = ALL_MESSAGES[SUCCESS];
-const ALL_ERROR_CODE = Object.keys(ALL_MESSAGES);
-
-const getMessageFromCode = (
-  errorCode: string,
-  defaultMessage: string,
-): string => {
-  let message = ALL_MESSAGES[errorCode] || '';
-  if (!message) {
-    const errorCodeWoutPrefix = ALL_ERROR_CODE.filter((item) =>
-      errorCode.endsWith(item),
-    );
-    message = errorCodeWoutPrefix[0]
-      ? ALL_MESSAGES[errorCodeWoutPrefix[0]]
-      : message;
-  }
-  message = message || defaultMessage;
-  if (!message)
-    fs.writeFile(
-      'error-codes-missing-message.log',
-      errorCode + '\n',
-      { flag: 'a' },
-      () => {},
-    );
-  return message;
-};
-
-export abstract class BaseException<TData> extends HttpException {
-  protected constructor(
-    partial: Payload<TData>,
-    statusCode: number,
-    defaultMessage = '',
-  ) {
-    const payload = {
-      ...defaultPayload,
-      ...partial,
-    };
-    payload.success = payload.errorCode === SUCCESS && payload.message === '';
-    payload.message =
-      payload.message || getMessageFromCode(payload.errorCode, defaultMessage);
-    super(payload, statusCode);
-  }
-}
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotAcceptableException,
+  NotFoundException,
+} from '@nestjs/common';
+import { I18nContext } from 'nestjs-i18n';
 
 /**
- * response to client an error
- * @example
- * throw new exc.BusinessException<number>({
-    errorCode: 'USER011C',
-    message: 'exc msg',
-    data: 1
-  });
+ * Generates a localized error message and throws a NotFoundException.
+ * @param index - The index or key used for looking up the localized error message.
+ * @param i18n - The internationalization context providing translation capabilities.
+ * @return A Promise that never resolves; instead, it throws a NotFoundException.
  */
-export class BusinessException<TData> extends BaseException<TData> {
-  constructor(
-    payload: Payload<TData>,
-    statusCode: number = HttpStatus.INTERNAL_SERVER_ERROR,
-  ) {
-    super(payload, statusCode);
-  }
-}
+export const NotFound = async (
+  index: string,
+  i18n: I18nContext,
+): Promise<never> => {
+  const message: string = await i18n.t(`${index}.not_found`, {
+    lang: i18n.lang,
+  });
 
-export class BadRequest<TData> extends BaseException<TData> {
-  constructor(payload: Payload<TData>) {
-    super(payload, HttpStatus.BAD_REQUEST);
-  }
-}
+  throw new NotFoundException(message);
+};
 
-export class Unauthorized<TData> extends BaseException<TData> {
-  constructor(payload: Payload<TData>) {
-    super(payload, HttpStatus.UNAUTHORIZED);
-  }
-}
+/**
+ * Generates a localized error message with optional arguments and throws a NotAcceptableException.
+ * @param key - The key or identifier used for looking up the localized error message.
+ * @param i18n - The internationalization context providing translation capabilities.
+ * @param args - Optional arguments to be used in the localized error message.
+ * @return A Promise that never resolves; instead, it throws a NotAcceptableException.
+ */
+export const NotAcceptable = async (
+  key: string,
+  i18n: I18nContext,
+  args?: Record<string, string | number>,
+): Promise<never> => {
+  const message: string = await i18n.t(key, { lang: i18n.lang, args });
 
-export class Forbidden<TData> extends BaseException<TData> {
-  constructor(payload: Payload<TData>) {
-    super(payload, HttpStatus.FORBIDDEN);
-  }
-}
+  throw new NotAcceptableException(message);
+};
 
-export class NotFound<TData> extends BaseException<TData> {
-  constructor(payload: Payload<TData>) {
-    super(payload, HttpStatus.NOT_FOUND, ALL_MESSAGES[NOT_FOUND]);
-  }
-}
+/**
+ * Generates a localized error message with optional arguments and throws a BadRequestException.
+ * @param key - The key or identifier used for looking up the localized error message.
+ * @param i18n - The internationalization context providing translation capabilities.
+ * @param args - Optional arguments to be used in the localized error message.
+ * @return A Promise that never resolves; instead, it throws a BadRequestException.
+ */
+export const BadRequest = async (
+  key: string,
+  i18n: I18nContext,
+  args?: Record<string, string | number>,
+): Promise<never> => {
+  const message: string = await i18n.t(key, { lang: i18n.lang, args });
 
-export class MethodNotAllowed<TData> extends BaseException<TData> {
-  constructor(payload: Payload<TData>) {
-    super(payload, HttpStatus.METHOD_NOT_ALLOWED);
-  }
-}
+  throw new BadRequestException(message);
+};
 
-export class UnsupportedMediaType<TData> extends BaseException<TData> {
-  constructor(payload: Payload<TData>) {
-    super(
-      payload,
-      HttpStatus.UNSUPPORTED_MEDIA_TYPE,
-      'Unsupported format file',
-    );
-  }
-}
+/**
+ * Generates a localized error message and throws a ForbiddenException.
+ * @param key - The key or identifier used for looking up the localized error message.
+ * @param i18n - The internationalization context providing translation capabilities.
+ * @return A Promise that never resolves; instead, it throws a ForbiddenException.
+ */
+export const Forbidden = async (
+  key: string,
+  i18n: I18nContext,
+): Promise<never> => {
+  const message: string = await i18n.t(key, { lang: i18n.lang });
 
-function reduceConstraintMsgs(
-  validationErrors: NestValidationError[],
-): string[] {
-  return validationErrors.reduce((acc, cur) => {
-    acc = acc.concat(Object.values(cur?.constraints || {}));
-
-    if (cur?.children) acc = acc.concat(reduceConstraintMsgs(cur?.children));
-
-    return acc;
-  }, []);
-}
-
-const regex = /^[A-Z_]*[0-9]*$/;
-export class ValidationError extends BadRequest<any[]> {
-  constructor(validationErrors: NestValidationError[]) {
-    let errorCode = VALIDATION;
-    const constraintMsgs = reduceConstraintMsgs(validationErrors);
-    const errorCodes = constraintMsgs
-      .filter((message) => regex.test(message))
-      .sort();
-
-    if (errorCodes.length) errorCode = errorCodes[0];
-
-    const payload: Payload<any[]> = {
-      errorCode,
-      message: ALL_MESSAGES[VALIDATION],
-      data: validationErrors.reduce((acc, cur) => {
-        if (acc.length === 0) {
-          const item = { target: cur.target };
-          delete cur.target;
-          item['error'] = [cur];
-          acc.push(item);
-          return acc;
-        }
-        delete cur.target;
-        acc[0]['error'].push(cur);
-        return acc;
-      }, []),
-    };
-    super(payload);
-  }
-}
-
-export class QueryDbError extends BadRequest<any> {
-  constructor(payload: Payload<any>) {
-    super(payload);
-  }
-}
+  throw new ForbiddenException(message);
+};

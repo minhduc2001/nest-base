@@ -9,6 +9,12 @@ type Join<K, P> = K extends string
 
 type Prev = [never, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, ...0[]];
 
+// unwrap Promise type
+type UnwrapPromise<T> = T extends Promise<infer U> ? UnwrapPromise<U> : T;
+
+// Unwrap Array type
+type UnwrapArray<T> = T extends Array<infer U> ? UnwrapArray<U> : T;
+
 // TODO: puts some comments here, in this ternary of doom
 export type Column<T, D extends number = 2> = [D] extends [never]
   ? never
@@ -18,7 +24,11 @@ export type Column<T, D extends number = 2> = [D] extends [never]
         ? T[K] extends Date
           ? `${K}`
           : T[K] extends Array<infer U>
-          ? `${K}` | Join<K, Column<U, Prev[D]>>
+          ? `${K}` | Join<K, Column<UnwrapArray<U>, Prev[D]>>
+          : T[K] extends Promise<infer U>
+          ? U extends Array<infer V>
+            ? `${K}` | Join<K, Column<UnwrapArray<V>, Prev[D]>>
+            : `${K}` | Join<K, Column<UnwrapPromise<U>, Prev[D]>>
           : `${K}` | Join<K, Column<T[K], Prev[D]>>
         : never;
     }[keyof T]
@@ -149,6 +159,18 @@ export function checkIsEmbedded(
   );
 }
 
+export function checkIsArray(
+  qb: SelectQueryBuilder<unknown>,
+  propertyName: string,
+): boolean {
+  if (!qb || !propertyName) {
+    return false;
+  }
+  return !!qb?.expressionMap?.mainAlias?.metadata.findColumnWithPropertyName(
+    propertyName,
+  )?.isArray;
+}
+
 // This function is used to fix the column alias when using relation, embedded or virtual properties
 export function fixColumnAlias(
   properties: ColumnProperties,
@@ -160,11 +182,22 @@ export function fixColumnAlias(
 ): string {
   if (isRelation) {
     if (isVirtualProperty && query) {
-      return `(${query(`${alias}_${properties.propertyPath}`)})`; // () is needed to avoid parameter conflict
+      return `(${query(`${alias}_${properties.propertyPath}_rel`)})`; // () is needed to avoid parameter conflict
     } else if ((isVirtualProperty && !query) || properties.isNested) {
-      return `${alias}_${properties.propertyPath}_${properties.propertyName}`;
+      if (properties.propertyName.includes('.')) {
+        const propertyPath = properties.propertyName.split('.');
+        const nestedRelations = propertyPath
+          .slice(0, -1)
+          .map((v) => `${v}_rel`)
+          .join('_');
+        const nestedCol = propertyPath[propertyPath.length - 1];
+
+        return `${alias}_${properties.propertyPath}_rel_${nestedRelations}.${nestedCol}`;
+      } else {
+        return `${alias}_${properties.propertyPath}_rel_${properties.propertyName}`;
+      }
     } else {
-      return `${alias}_${properties.propertyPath}.${properties.propertyName}`;
+      return `${alias}_${properties.propertyPath}_rel.${properties.propertyName}`;
     }
   } else if (isVirtualProperty) {
     return query
@@ -192,4 +225,12 @@ export function getQueryUrlComponents(path: string): {
     queryPath = path;
   }
   return { queryOrigin, queryPath };
+}
+
+const isoDateRegExp = new RegExp(
+  /(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))/,
+);
+
+export function isISODate(str: string): boolean {
+  return isoDateRegExp.test(str);
 }

@@ -13,7 +13,7 @@ WORKDIR /usr/src/app
 COPY --chown=node:node package*.json ./
 
 # Install app dependencies using the `npm ci` command instead of `npm install`
-RUN yarn
+RUN npm ci
 
 # Bundle app source
 COPY --chown=node:node . .
@@ -40,7 +40,7 @@ COPY --chown=node:node --from=development /usr/src/app/node_modules ./node_modul
 COPY --chown=node:node . .
 
 # Run the build command which creates the production bundle
-RUN yarn build
+RUN npm run build
 
 # Set NODE_ENV environment variable
 ENV NODE_ENV production

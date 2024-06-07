@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 
 import { config } from '@/config';
 import { LoggerService } from '@base/logger';
-import * as exc from '@base/api/exception.reslover';
+import { BadRequest } from '../api/exception.reslover';
 @Injectable()
 export class MailerService {
   private transporter: any;
@@ -34,7 +34,7 @@ export class MailerService {
       return true;
     } catch (e) {
       this.logger.warn(e);
-      throw new exc.BadRequest({ message: e.message });
+      return new BadRequestException();
     }
   }
 }

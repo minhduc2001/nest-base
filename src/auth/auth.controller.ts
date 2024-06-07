@@ -1,24 +1,24 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Headers, Ip, Post } from '@nestjs/common';
 
 import { AuthService } from './auth.service';
-import { Public } from './decorator/public.decorator';
-import { LoginDto, RegisterDto } from './dtos/auth.dto';
+import { ApiOperation, ApiTagsAndBearer } from '@/base/swagger';
+import { I18n, I18nContext } from 'nestjs-i18n';
+import { ITokens } from './auth.constant';
+import { LoginDto } from './dtos/login.dto';
 
 @Controller('auth')
-@ApiTags('Auth')
+@ApiTagsAndBearer('Auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Public()
+  @ApiOperation({ summary: 'Login to service' })
   @Post('login')
-  async login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
-  }
-
-  @Public()
-  @Post('register')
-  async register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
+  login(
+    @Body() payload: LoginDto,
+    @Ip() ip: string,
+    @Headers() headers: Record<string, string>,
+    @I18n() i18n: I18nContext,
+  ): Promise<ITokens> {
+    return this.authService.login(payload, { ip, headers }, i18n);
   }
 }

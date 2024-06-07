@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { configure, getLogger } from 'log4js';
+import { QueryRunner, Logger as TLogger } from 'typeorm';
+import { configure, getLogger, Logger as Logger4js } from 'log4js';
 
 import { config } from '@base/config';
 
@@ -20,6 +21,73 @@ const appenders = {
 const categories = {
   default: { appenders: ['console', 'file'], level: level },
 };
+
+class DbLogger implements TLogger {
+  constructor(private logger: Logger4js) {}
+
+  /**
+   * Logs query and parameters used in it.
+   */
+  logQuery(query: string, parameters?: any[], queryRunner?: QueryRunner): any {
+    this.logger.debug(
+      `query=${query}` +
+        (parameters ? ` parameters=${JSON.stringify(parameters)}` : ``),
+    );
+  }
+
+  /**
+   * Logs query that is failed.
+   */
+  logQueryError(
+    error: Error & { code: string },
+    query: string,
+    parameters?: any[],
+    queryRunner?: QueryRunner,
+  ): any {
+    this.logger.debug(error);
+    const errorMessage = error.message ? error.message : error;
+    this.logger.error(errorMessage);
+    this.logger.error(
+      `query=${query} parameters=${JSON.stringify(parameters)}`,
+    );
+  }
+
+  /**
+   * Logs query that is slow.
+   */
+  logQuerySlow(
+    time: number,
+    query: string,
+    parameters?: any[],
+    queryRunner?: QueryRunner,
+  ): any {
+    this.logger.warn(
+      `time=${time} query=${query} parameters=${JSON.stringify(parameters)}`,
+    );
+  }
+
+  /**
+   * Logs events from the schema build process.
+   */
+  logSchemaBuild(message: string, queryRunner?: QueryRunner): any {}
+
+  /**
+   * Logs events from the migrations run process.
+   */
+  logMigration(message: string, queryRunner?: QueryRunner): any {}
+
+  /**
+   * Perform logging using given logger, or by default to the console.
+   * Log has its own level and message.
+   */
+  log(
+    level: 'log' | 'info' | 'warn',
+    message: any,
+    queryRunner?: QueryRunner,
+  ): any {
+    this.logger[level](message);
+  }
+}
 
 @Injectable()
 export class LoggerService extends Logger {
@@ -64,5 +132,9 @@ export class LoggerService extends Logger {
 
   verbose(message: string, context?: string): void {
     super.verbose(message, context);
+  }
+
+  getDbLogger(category: string) {
+    return new DbLogger(this.getLogger(category));
   }
 }

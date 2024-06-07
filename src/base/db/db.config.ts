@@ -8,6 +8,13 @@ export const dbConfig: TypeOrmModuleOptions = {
   username: config.DB_USERNAME,
   password: config.DB_PASSWORD,
   database: config.DB_DATABASE,
-  entities: ['dist/**/*.entity{.ts,.js}'],
   synchronize: true,
-};
+  idleTimeoutMillis: 0,
+  connectTimeoutMS: 0,
+  extra: {
+    connectionLimit: 10,
+  },
+  autoLoadEntities: true,
+  cli: { migrationsDir: 'src/migrations/migration/' },
+  useNewUrlParser: true,
+} as TypeOrmModuleOptions;

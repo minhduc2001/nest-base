@@ -16,14 +16,16 @@ import {
   SelectQueryBuilder,
 } from 'typeorm';
 import { WherePredicateOperator } from 'typeorm/query-builder/WhereClause';
+import { PaginateQuery } from './paginate.interface';
 import {
+  checkIsArray,
   checkIsEmbedded,
   checkIsRelation,
   extractVirtualProperty,
   fixColumnAlias,
   getPropertiesByColumnName,
+  isISODate,
 } from './paginate.helper';
-import { PaginateQuery } from '@base/service/paginate/paginate.interface';
 
 export enum FilterOperator {
   EQ = '$eq',
@@ -171,6 +173,8 @@ export function addWhereCondition<T>(
   );
   const isRelation = checkIsRelation(qb, columnProperties.propertyPath);
   const isEmbedded = checkIsEmbedded(qb, columnProperties.propertyPath);
+  const isArray = checkIsArray(qb, columnProperties.propertyName);
+
   const alias = fixColumnAlias(
     columnProperties,
     qb.alias,
@@ -197,6 +201,13 @@ export function addWhereCondition<T>(
         [columnNamePerIteration]: columnFilter.findOperator.value,
       },
     );
+    if (
+      isArray &&
+      condition.parameters?.length &&
+      !['not', 'isNull'].includes(condition.operator)
+    ) {
+      condition.parameters[0] = `cardinality(${condition.parameters[0]})`;
+    }
     if (columnFilter.comparator === FilterComparator.OR) {
       qb.orWhere(qb['createWhereConditionExpression'](condition), parameters);
     } else {
@@ -205,7 +216,7 @@ export function addWhereCondition<T>(
   });
 }
 
-export function getFilterTokens(raw?: string): FilterToken | null {
+export function parseFilterToken(raw?: string): FilterToken | null {
   if (raw === undefined || raw === null) {
     return null;
   }
@@ -259,24 +270,18 @@ export function parseFilter(
   },
 ): ColumnsFilters {
   const filter: ColumnsFilters = {};
-  if (!filterableColumns && !query.filter) {
+  if (!filterableColumns || !query.filter) {
     return {};
   }
-
-  if (!filterableColumns) filterableColumns = JSON.parse(String(query.filter));
-
-  const filterTemp = JSON.parse(String(query.filter));
-
-  for (const column of Object.keys(filterTemp)) {
-    if (filterableColumns && !(column in filterableColumns)) {
+  for (const column of Object.keys(query.filter)) {
+    if (!(column in filterableColumns)) {
       continue;
     }
     const allowedOperators = filterableColumns[column];
-    const input = filterTemp[column];
+    const input = query.filter[column];
     const statements = !Array.isArray(input) ? [input] : input;
-
     for (const raw of statements) {
-      const token = getFilterTokens(raw);
+      const token = parseFilterToken(raw);
       if (!token) {
         continue;
       }
@@ -305,14 +310,17 @@ export function parseFilter(
         findOperator: undefined,
       };
 
+      const fixValue = (value: string) =>
+        isISODate(value) ? new Date(value) : value;
+
       switch (token.operator) {
         case FilterOperator.BTW:
           params.findOperator = OperatorSymbolToFunction.get(token.operator)(
-            ...token.value.split(','),
+            ...token.value.split(',').map(fixValue),
           );
           break;
         case FilterOperator.IN:
-        case FilterOperator.CONTAINS: // <- IN and CONTAINS are identically handled.
+        case FilterOperator.CONTAINS:
           params.findOperator = OperatorSymbolToFunction.get(token.operator)(
             token.value.split(','),
           );
@@ -329,7 +337,7 @@ export function parseFilter(
           break;
         default:
           params.findOperator = OperatorSymbolToFunction.get(token.operator)(
-            token.value,
+            fixValue(token.value),
           );
       }
 
@@ -356,11 +364,30 @@ export function addFilter<T>(
   },
 ): SelectQueryBuilder<T> {
   const filter = parseFilter(query, filterableColumns);
-  return qb.andWhere(
+
+  const filterEntries = Object.entries(filter);
+  const orFilters = filterEntries.filter(([_, value]) =>
+    value.some((v) => v.comparator === '$or'),
+  );
+  const andFilters = filterEntries.filter(([_, value]) =>
+    value.some((v) => v.comparator !== '$or'),
+  );
+
+  qb.andWhere(
     new Brackets((qb: SelectQueryBuilder<T>) => {
-      for (const column in filter) {
+      for (const [column] of orFilters) {
         addWhereCondition(qb, column, filter);
       }
     }),
   );
+
+  qb.andWhere(
+    new Brackets((qb: SelectQueryBuilder<T>) => {
+      for (const [column] of andFilters) {
+        addWhereCondition(qb, column, filter);
+      }
+    }),
+  );
+
+  return qb;
 }
